@@ -1,138 +1,114 @@
-from fastapi import FastAPI
-
-# from pydantic import BaseModel
-# from typing import Optional
-
+import sys
+import time
 import random
-
-import mechanize
-from bs4 import BeautifulSoup
-import html5lib
-
-import requests
 import json
 
-rockauto_api = FastAPI()
+from selenium import webdriver
 
-@rockauto_api.get("/")
-async def root():
-    return {"message": "Hello World"}
+# from selenium.webdriver.chrome import options
+# from selenium.webdriver.common.by import By
 
-@rockauto_api.get("/makes")
-async def get_makes():
-    makes_list = []
+# from bs4 import BeautifulSoup
+# import lxml
 
-    browser = mechanize.Browser()
-    page_content = browser.open('https://www.rockauto.com/en/catalog/').read()
+CHROMEDRIVER_PATH = 'chromedriver.exe'
+WINDOW_SIZE = '1920,1080'
 
-    browser.close()
+def main( ):
+    driver = webdriver.Chrome( executable_path=CHROMEDRIVER_PATH )
 
-    soup = BeautifulSoup(page_content, features='html5lib').find_all('div', attrs={'class', 'ranavnode'})
-    soup_filter = []
+    driver.get('http://www.google.com/')
 
-    # Find US Market Only
-    for x in soup:
-        if 'US' in next(x.children)['value']:
-            soup_filter.append( x.find('a', attrs={'class', 'navlabellink'}) )
+    time.sleep(5) # Let the user actually see something!
 
-    # Get [Make, Year, Model, Link]
-    for x in soup_filter:
-        makes_list.append( {'make': x.get_text(), 'link': 'https://www.rockauto.com' + str( x.get('href') ) })
+    driver.quit()
+    # try:
+    #     options = Options()
+    #     # options.add_argument( '--headless' )
+    #     # options.add_argument( '--disable-gpu' )
+    #     options.add_argument( '--window-size=%s' % WINDOW_SIZE )
 
-    return makes_list
+    #     # User-Agent
+    #     options.add_argument('--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.100 Safari/537.36')
 
-@rockauto_api.get("/years/{search_vehicle}")
-async def get_years( search_make: str, search_link: str ):
-    years_list = []
+    #     # Suppress Unwanted Warnings
+    #     options.add_experimental_option('excludeSwitches', ['enable-logging'])
 
-    browser = mechanize.Browser()
-    page_content = browser.open( search_link ).read()
-    browser.close()
+    #     # Establish Driverpip3
+    #     # driver = webdriver.Chrome( executable_path=CHROMEDRIVER_PATH, options=options )
+    #     # Delete Cookies
+    #     driver.delete_all_cookies()
+    #     # Pause
+    #     driver.implicitly_wait( 15 )
+    #     # Get Page
+    #     driver.get('https://www.rockauto.com/en/catalog/')
+    #     # Sleep to load page
+    #     time.sleep( random.randint( 5, 10 ) )
 
-    soup = BeautifulSoup(page_content, features='html5lib').find_all('div', attrs={'class', 'ranavnode'})[1:]
-    soup_filter = []
+    #     for index_1, val_1 in enumerate( driver.find_elements( By.CLASS_NAME, 'ranavnode' ) ):
+    #         print( 'Make Layer' )
+    #         make_button = val_1.find_element( By.CLASS_NAME, 'nlabel' )
+            
+    #         # Open Make Drop Down
+    #         make_button.click()
+    #         time.sleep( 2 )
+            
+    #         # Check 
+    #         if not 'ra-hide' in val_1.find_element( By.CLASS_NAME, 'nchildren' ).find_element( By.CLASS_NAME, 'ranavnode' ).find_element( By.CLASS_NAME, 'nchildren' ).get_attribute( 'class' ).split( ' ' ):
+    #             print( 'Bad' )
 
-    # Find US Market Only
-    for x in soup:
-        if 'US' in next(x.children)['value']:
-            soup_filter.append( x.find('a', attrs={'class', 'navlabellink'}) )
+    #         for index_2, val_2 in enumerate( val_1.find_element( By.CLASS_NAME, 'nchildren' ).find_elements( By.CLASS_NAME, 'ranavnode' ) ):
+    #             print( 'Year Layer' )
+    #             year_button = val_2.find_element( By.CLASS_NAME, 'nlabel' )
 
-    # Get [Make, Year, Model, Link]
-    for x in soup_filter:
-        years_list.append( {'make': search_make, 'year': x.get_text(), 'link': 'https://www.rockauto.com' + str( x.get('href') ) })
+    #             # Open Make Drop Down
+    #             year_button.click()
+    #             time.sleep( 2 )
+    #             if not 'ra-hide' in val_2.find_element( By.CLASS_NAME, 'nchildren' ).find_element( By.CLASS_NAME, 'ranavnode' ).find_element( By.CLASS_NAME, 'nchildren' ).get_attribute( 'class' ).split( ' ' ):
+    #                 print( 'Bad' )
 
-    return years_list
+    #             for index_3, val_3 in enumerate( val_2.find_element( By.CLASS_NAME, 'nchildren' ).find_elements( By.CLASS_NAME, 'ranavnode' ) ):
+    #                 print( 'Model Layer' )
+    #                 mdoel_button = val_3.find_element( By.CLASS_NAME, 'nlabel' )
+                    
+    #                 # Open Make Drop Down
+    #                 mdoel_button.click()
+    #                 time.sleep( 2 )
 
-@rockauto_api.get("/years/{search_vehicle}")
-async def get_models( search_make: str, search_year: str, search_link: str ):
-    models_list = []
+    #                 # Collapse Single Items
+    #                 if not 'ra-hide' in val_3.find_element( By.CLASS_NAME, 'nchildren' ).find_element( By.CLASS_NAME, 'ranavnode' ).find_element( By.CLASS_NAME, 'nchildren' ).get_attribute( 'class' ).split( ' ' ):
+    #                     val_3.find_element( By.CLASS_NAME, 'nchildren' ).find_element( By.CLASS_NAME, 'ranavnode' ).find_element( By.CLASS_NAME, 'nlabel' ).click()
+    #                     time.sleep( 2 )
+    #                     # input( 'Press any key to continue . . .' )
+                    
+    #                 # Close Make Drop Down
+    #                 mdoel_button.click()
+    #                 time.sleep( 1 )
 
-    browser = mechanize.Browser()
-    page_content = browser.open( search_link ).read()
-    browser.close()
+    #                 if index_3 == 0: 
+    #                     break
+    #             # Close Make Drop Down
+    #             year_button.click()
+    #             time.sleep( 1 )
 
-    soup = BeautifulSoup(page_content, features='html5lib').find_all('div', attrs={'class', 'ranavnode'})[2:]
-    soup_filter = []
+    #             if index_2 == 0:
+    #                 break
 
-    # Find US Market Only
-    for x in soup:
-        if 'US' in next(x.children)['value']:
-            soup_filter.append( x.find('a', attrs={'class', 'navlabellink'}) )
+    #         # Close Make Drop Down
+    #         make_button.click()
+    #         time.sleep( 1 )
 
-    # Get [Make, Year, Model, Link]
-    for x in soup_filter:
-        models_list.append( {'make': search_make, 'year': search_year, 'model': x.get_text(), 'link': 'https://www.rockauto.com' + str( x.get('href') ) })
+    #         if index_1 == 0:
+    #             break
 
-    return models_list
+    # except Exception as e:
+    #     print( e )
+    # finally:
+    #     driver.quit()
 
-@rockauto_api.get("/engines/{search_vehicle}")
-async def get_engines( search_make: str, search_year: str, search_model: str, search_link: str ):
-    engines_list = []
+if __name__ == '__main__':
+    sys.exit( main( ) )
 
-    browser = mechanize.Browser()
-    page_content = browser.open( search_link ).read()
-    browser.close()
-
-    soup = BeautifulSoup(page_content, features='html5lib').find_all('div', attrs={'class', 'ranavnode'})[3:]
-    soup_filter = []
-
-    # Find US Market Only
-    for x in soup:
-        if 'US' in next(x.children)['value']:
-            soup_filter.append( x.find('a', attrs={'class', 'navlabellink'}) )
-
-    # Get [Make, Year, Model, Link]
-    for x in soup_filter:
-        engines_list.append( {'make': search_make, 'year': search_year, 'model': search_model, 'engine': x.get_text(), 'link': 'https://www.rockauto.com' + str( x.get('href') ) })
-    
-    return engines_list
-
-@rockauto_api.get("/categories/{search_vehicle}")
-async def get_categories( search_make: str, search_year: str, search_model: str, search_engine: str, search_link: str ):
-    categories_list = []
-
-    browser = mechanize.Browser()
-    page_content = browser.open( search_link ).read()
-    browser.close()
-
-    soup = BeautifulSoup(page_content, features='html5lib').find_all('a', attrs={'class', 'navlabellink'})[4:]
-
-    for x in soup:
-        categories_list.append( {'make': search_make, 'year': search_year, 'model': search_model, 'engine': search_engine, 'category': x.get_text(), 'link': 'https://www.rockauto.com' + str( x.get('href') ) })
-
-    return categories_list
-
-@rockauto_api.get("/sub_categories/{search_vehicle}")
-async def get_sub_categories( search_make: str, search_year: str, search_model: str, search_engine: str, search_category: str, search_link: str ):
-    sub_categories_list = []
-
-    browser = mechanize.Browser()
-    page_content = browser.open( search_link ).read()
-    browser.close()
-
-    soup = BeautifulSoup(page_content, features='html5lib').find_all('a', attrs={'class', 'navlabellink'})[5:]
-
-    for x in soup:
-        sub_categories_list.append( {'make': search_make, 'year': search_year, 'model': search_model, 'engine': search_engine, 'category': search_category, 'sub_category': x.get_text(), 'link': 'https://www.rockauto.com' + str( x.get('href') ) })
-
-    return sub_categories_list
+# Tips & Tricks
+# https://levelup.gitconnected.com/8-tips-to-master-web-control-with-selenium-ab120004753a
+# https://towardsdatascience.com/how-to-setup-selenium-on-a-linux-vm-cd19ee47d922
